@@ -7,6 +7,7 @@ HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 GUARD="$HERE/exec-bits.sh"
 TMP=$(mktemp -d) || exit 1
 trap 'rm -rf "$TMP"' EXIT
+trap 'exit 130' INT TERM HUP   # dash sinyalde EXIT trap'ini calistirmaz; exit onu tetikler
 GIT_CEILING_DIRECTORIES=$(dirname -- "$TMP")   # R2: ust dizindeki bir depoya cikilmasin
 export GIT_CEILING_DIRECTORIES
 # Gelistiricinin global/sistem git ayarlari (gpgsign, hooksPath, color...) testleri etkilemesin.
