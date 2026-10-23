@@ -81,6 +81,12 @@ expect "T6 git deposu degil -> 0" 0 "$TMP/t6" "git deposu değil, atlandı"
 r=$(new_repo t7) && printf 'echo hi\n#!/bin/sh\n' > "$r/run.sh" && git -C "$r" add run.sh
 expect "T7 #! ikinci satirda -> 0" 0 "${r:-$TMP/t7}"
 
+# T8 kullanicinin grep/renk ayarlari kontrolu koremez -> kirmizi (review bulgu 1)
+r=$(new_repo t8) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh &&
+  git -C "$r" config color.ui always && git -C "$r" config color.grep always &&
+  git -C "$r" config grep.patternType fixed
+expect "T8 color/patternType ayarli depo -> 1" 1 "${r:-$TMP/t8}" "run.sh"
+
 rm -rf "$TMP"
 if [ -d "$TMP" ]; then echo "FAIL  gecici depo silinemedi: $TMP"; fails=$((fails + 1)); fi
 

@@ -12,7 +12,7 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 # Index'teki icerikte ilk satiri #! olan dosyalar: tek git grep sureci, yalnizca 1. satir eslesmeleri.
-bad=$(git grep --cached -I -n -e '^#!' 2>/dev/null | sed -n 's/^\(.*\):1:#!.*$/\1/p' |
+bad=$(git grep --no-color -G --cached -I -n -e '^#!' 2>/dev/null | sed -n 's/^\(.*\):1:#!.*$/\1/p' |
   while IFS= read -r f; do
     mode=$(git ls-files -s -- "$f" | cut -d' ' -f1)
     case "$mode" in
