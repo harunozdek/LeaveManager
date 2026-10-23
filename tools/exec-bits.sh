@@ -13,7 +13,10 @@ fi
 
 # Adaylar: index'te herhangi bir satiri #! ile baslayan dosyalar (tek git grep sureci; satir ciktisi
 # ayristirilmaz). Calistirilabilir olmayan her aday icin ilk satir index blob'undan dogrulanir.
-candidates=$(git grep --no-color -G --cached -I -l -e '^#!' 2>/dev/null)
+# -z: yollar tirnaklanmaz (Turkce/ozel karakterler); literal pathspec: [ * ? glob sayilmaz.
+GIT_LITERAL_PATHSPECS=1
+export GIT_LITERAL_PATHSPECS
+candidates=$(git grep --no-color -G --cached -I -l -z -e '^#!' 2>/dev/null | tr '\000' '\n')
 
 bad=""
 while IFS= read -r f; do
@@ -21,6 +24,8 @@ while IFS= read -r f; do
   mode=$(git ls-files -s -- "$f" | cut -d' ' -f1)
   case "$mode" in
     100755|120000|160000) continue ;;
+    '') bad="${bad}? $f
+"; continue ;;   # mod okunamadi: sessizce atlama, ihlal say (fail-closed)
   esac
   [ "$(git cat-file blob ":$f" | head -c 2)" = '#!' ] || continue
   bad="$bad$mode $f

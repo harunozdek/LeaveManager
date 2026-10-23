@@ -87,6 +87,18 @@ r=$(new_repo t8) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" a
   git -C "$r" config grep.patternType fixed
 expect "T8 color/patternType ayarli depo -> 1" 1 "${r:-$TMP/t8}" "run.sh"
 
+# T9a Turkce karakterli yol, 100755 -> yesil (review bulgu 2: tirnakli yol yanlis kirmizi veriyordu)
+r=$(new_repo t9a) && printf '#!/bin/sh\necho hi\n' > "$r/izin-ş.sh" && git -C "$r" add --chmod=+x "izin-ş.sh"
+expect "T9a Turkce yol 100755 -> 0" 0 "${r:-$TMP/t9a}"
+
+# T9c Turkce karakterli yol, 100644 -> kirmizi (sessizce atlanmamali)
+r=$(new_repo t9c) && printf '#!/bin/sh\necho hi\n' > "$r/izin-ş.sh" && git -C "$r" add "izin-ş.sh"
+expect "T9c Turkce yol 100644 -> 1" 1 "${r:-$TMP/t9c}" "izin-ş.sh (100644)"
+
+# T9b bosluk ve glob karakterli yol, 100644 -> kirmizi, yol oldugu gibi yazilir
+r=$(new_repo t9b) && printf '#!/bin/sh\necho hi\n' > "$r/a b[1].sh" && git -C "$r" add "a b[1].sh"
+expect "T9b bosluk/glob karakterli yol 100644 -> 1" 1 "${r:-$TMP/t9b}" "a b[1].sh (100644)"
+
 # T10 icerikte ':1:#!' gecen, shebang'siz (#! 2. satirda) dosya -> yesil (review bulgu 3)
 r=$(new_repo t10) && printf 'echo hi\n#! not a:1:#!b\n' > "$r/y.sh" && git -C "$r" add y.sh
 expect "T10 icerikte ':1:#!' -> 0" 0 "${r:-$TMP/t10}"
