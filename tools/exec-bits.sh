@@ -41,6 +41,6 @@ fi
 
 echo "exec-bits: calistirilamaz olarak kayitli script(ler) — Linux'ta 'exit code 126' verir:"
 printf '%s' "$bad" | while IFS=' ' read -r mode f; do
-  echo "  $f ($mode) -> duzeltme: git update-index --chmod=+x $f"
+  echo "  $f ($mode) -> duzeltme: git update-index --chmod=+x '$f'"
 done
 exit 1

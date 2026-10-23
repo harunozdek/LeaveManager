@@ -50,7 +50,7 @@ expect() {
 # T1 shebang + 100644, commit'li -> kirmizi; yol ve duzeltme komutu gorunur (CB-1)
 r=$(new_repo t1) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh
 if git -C "$r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --no-verify -m t; then
-  expect "T1 shebang 100644 commit'li -> 1" 1 "$r" "run.sh" "git update-index --chmod=+x run.sh"
+  expect "T1 shebang 100644 commit'li -> 1" 1 "$r" "run.sh" "git update-index --chmod=+x 'run.sh'"
 else
   echo "FAIL  T1 hazirlik: commit basarisiz, senaryo sinanamadi"
   fails=$((fails + 1))
@@ -97,7 +97,7 @@ expect "T9c Turkce yol 100644 -> 1" 1 "${r:-$TMP/t9c}" "izin-ş.sh (100644)"
 
 # T9b bosluk ve glob karakterli yol, 100644 -> kirmizi, yol oldugu gibi yazilir
 r=$(new_repo t9b) && printf '#!/bin/sh\necho hi\n' > "$r/a b[1].sh" && git -C "$r" add "a b[1].sh"
-expect "T9b bosluk/glob karakterli yol 100644 -> 1" 1 "${r:-$TMP/t9b}" "a b[1].sh (100644)"
+expect "T9b bosluk/glob karakterli yol 100644 -> 1" 1 "${r:-$TMP/t9b}" "a b[1].sh (100644)" "git update-index --chmod=+x 'a b[1].sh'"
 
 # T10 icerikte ':1:#!' gecen, shebang'siz (#! 2. satirda) dosya -> yesil (review bulgu 3)
 r=$(new_repo t10) && printf 'echo hi\n#! not a:1:#!b\n' > "$r/y.sh" && git -C "$r" add y.sh
