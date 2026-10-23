@@ -44,5 +44,8 @@ düzeltilmez; `/refactor` ya da `/change` kalemi olarak ele alınır.
 ## Enforced by tooling
 - Derleyici: C# derleme hataları (`build` adımı).
 - `.editorconfig` + `dotnet format --verify-no-changes` (whitespace ve stil, iki proje için) — `scripts/check` `format` adımı.
+- Shebang'li (`#!`) her takip edilen dosya git'te çalıştırılabilir (100755) olmalı — `scripts/check` `exec-bits`
+  adımı (`tools/exec-bits.sh`, spec 0003). Windows'ta yeni script eklerken: `git add --chmod=+x <yol>`;
+  zaten eklenmişse: `git update-index --chmod=+x <yol>`.
 - Review'da kontrol edilen (henüz araçla değil): boş catch yasağı, `DateTime.Now` yasağı, katman kuralları
   (`docs/architecture.md`; mimari test refactor ile gelecek).
