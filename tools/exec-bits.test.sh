@@ -87,6 +87,10 @@ r=$(new_repo t8) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" a
   git -C "$r" config grep.patternType fixed
 expect "T8 color/patternType ayarli depo -> 1" 1 "${r:-$TMP/t8}" "run.sh"
 
+# T10 icerikte ':1:#!' gecen, shebang'siz (#! 2. satirda) dosya -> yesil (review bulgu 3)
+r=$(new_repo t10) && printf 'echo hi\n#! not a:1:#!b\n' > "$r/y.sh" && git -C "$r" add y.sh
+expect "T10 icerikte ':1:#!' -> 0" 0 "${r:-$TMP/t10}"
+
 rm -rf "$TMP"
 if [ -d "$TMP" ]; then echo "FAIL  gecici depo silinemedi: $TMP"; fails=$((fails + 1)); fi
 
