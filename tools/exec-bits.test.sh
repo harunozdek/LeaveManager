@@ -1,0 +1,79 @@
+#!/bin/sh
+# tools/exec-bits.test.sh — spec 0003: tools/exec-bits.sh senaryo testleri (T1-T7, plan 0003).
+# Gecici git deposu repo DISINDA (mktemp -d) kurulur ve her durumda silinir (docs/testing.md, rule 5).
+# Modlar yalnizca git index'iyle verilir (git add --chmod / update-index), chmod ile asla (CB-2).
+set -u
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+GUARD="$HERE/exec-bits.sh"
+TMP=$(mktemp -d) || exit 1
+trap 'rm -rf "$TMP"' EXIT
+GIT_CEILING_DIRECTORIES=$(dirname -- "$TMP")   # R2: ust dizindeki bir depoya cikilmasin
+export GIT_CEILING_DIRECTORIES
+fails=0
+runs=0
+
+# new_repo <ad>: bos depo + kontrolun calistirilabilir kopyasi; depo yolunu yazar
+new_repo() {
+  r="$TMP/$1"
+  mkdir -p "$r/tools"
+  git -C "$r" init -q
+  git -C "$r" config core.autocrlf false   # yalnizca gecici depo; gelistiricinin global ayari degismez
+  cp "$GUARD" "$r/tools/exec-bits.sh" || return 1
+  git -C "$r" add --chmod=+x tools/exec-bits.sh
+  echo "$r"
+}
+
+# expect <ad> <beklenen cikis> <dizin> [ciktida bulunmasi gereken metin...]
+expect() {
+  name=$1 want=$2 dir=$3
+  shift 3
+  runs=$((runs + 1))
+  out=$(sh "$dir/tools/exec-bits.sh" 2>&1)
+  rc=$?
+  ok=1
+  [ "$rc" -eq "$want" ] || ok=0
+  for s in "$@"; do printf '%s' "$out" | grep -qF -- "$s" || ok=0; done
+  if [ "$ok" -eq 1 ]; then
+    echo "ok    $name"
+  else
+    echo "FAIL  $name (cikis $rc, beklenen $want)"
+    printf '%s\n' "$out" | sed 's/^/      /'
+    fails=$((fails + 1))
+  fi
+}
+
+# T1 shebang + 100644, commit'li -> kirmizi; yol ve duzeltme komutu gorunur (CB-1)
+r=$(new_repo t1) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh &&
+  git -C "$r" -c user.name=t -c user.email=t@t commit -q -m t
+expect "T1 shebang 100644 commit'li -> 1" 1 "${r:-$TMP/t1}" "run.sh" "git update-index --chmod=+x run.sh"
+
+# T2 shebang + 100644, yalnizca git add (commit yok) -> kirmizi (CB-1, staged)
+r=$(new_repo t2) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh
+expect "T2 shebang 100644 staged -> 1" 1 "${r:-$TMP/t2}" "run.sh"
+
+# T3 shebang + 100755 -> yesil
+r=$(new_repo t3) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add --chmod=+x run.sh
+expect "T3 shebang 100755 -> 0" 0 "${r:-$TMP/t3}"
+
+# T4 shebang'siz + 100644 -> yesil (CB-3)
+r=$(new_repo t4) && printf 'merhaba\n' > "$r/notes.txt" && git -C "$r" add notes.txt
+expect "T4 shebang'siz 100644 -> 0" 0 "${r:-$TMP/t4}"
+
+# T5 icerigi #! ile baslayan symlink kaydi (120000) -> yok sayilir
+r=$(new_repo t5) && sha=$(printf '#!hedef' | git -C "$r" hash-object -w --stdin) &&
+  git -C "$r" update-index --add --cacheinfo "120000,$sha,link"
+expect "T5 symlink 120000 -> 0" 0 "${r:-$TMP/t5}"
+
+# T6 git deposu olmayan dizin -> yesil, not yazilir (CB-5)
+mkdir -p "$TMP/t6/tools" && cp "$GUARD" "$TMP/t6/tools/exec-bits.sh"
+expect "T6 git deposu degil -> 0" 0 "$TMP/t6" "git deposu değil, atlandı"
+
+# T7 #! ilk satirda degil -> shebang sayilmaz -> yesil
+r=$(new_repo t7) && printf 'echo hi\n#!/bin/sh\n' > "$r/run.sh" && git -C "$r" add run.sh
+expect "T7 #! ikinci satirda -> 0" 0 "${r:-$TMP/t7}"
+
+rm -rf "$TMP"
+if [ -d "$TMP" ]; then echo "FAIL  gecici depo silinemedi: $TMP"; fails=$((fails + 1)); fi
+
+echo "exec-bits-test: $runs senaryo, $fails basarisiz"
+[ "$fails" -eq 0 ]
