@@ -25,6 +25,8 @@
 - Her iş kuralı (BR-n, `docs/domain.md`) en az bir testle; bir OD kapatıldığında yeni davranış testle.
 - **Determinizm:** "bugün"e bağlı beklentiler (kıdem, hak, kalan) `TimeProvider` seam'i gelene kadar
   sabit değerle yazılmaz — takvim ilerledikçe kırılırlar. Seam ilk refactor kalemidir (davranış değişmez).
+  İstisna: kıdemi yıllarca aynı hak diliminde kalan seed personeli, **geçerlilik ufku spec'te yazılı
+  olmak koşuluyla** sabit değerle iddia edilebilir (ör. spec 0001, PB-2: 2035'e kadar).
 - Güvenlik düzeltmeleri (SEC-n, `docs/security.md`) önce kırmızı bir testle yeniden üretilir.
 - Mimari kurallar (`docs/architecture.md`, Forbidden dependencies) refactor ile birlikte bir mimari testle.
 - Smoke: uygulama ayağa kalkar ve ana sayfa render edilir (`SmokeTests`).
