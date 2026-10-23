@@ -9,6 +9,10 @@ TMP=$(mktemp -d) || exit 1
 trap 'rm -rf "$TMP"' EXIT
 GIT_CEILING_DIRECTORIES=$(dirname -- "$TMP")   # R2: ust dizindeki bir depoya cikilmasin
 export GIT_CEILING_DIRECTORIES
+# Gelistiricinin global/sistem git ayarlari (gpgsign, hooksPath, color...) testleri etkilemesin.
+GIT_CONFIG_GLOBAL=/dev/null
+GIT_CONFIG_NOSYSTEM=1
+export GIT_CONFIG_GLOBAL GIT_CONFIG_NOSYSTEM
 fails=0
 runs=0
 
@@ -43,9 +47,13 @@ expect() {
 }
 
 # T1 shebang + 100644, commit'li -> kirmizi; yol ve duzeltme komutu gorunur (CB-1)
-r=$(new_repo t1) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh &&
-  git -C "$r" -c user.name=t -c user.email=t@t commit -q -m t
-expect "T1 shebang 100644 commit'li -> 1" 1 "${r:-$TMP/t1}" "run.sh" "git update-index --chmod=+x run.sh"
+r=$(new_repo t1) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh
+if git -C "$r" -c user.name=t -c user.email=t@t -c commit.gpgsign=false commit -q --no-verify -m t; then
+  expect "T1 shebang 100644 commit'li -> 1" 1 "$r" "run.sh" "git update-index --chmod=+x run.sh"
+else
+  echo "FAIL  T1 hazirlik: commit basarisiz, senaryo sinanamadi"
+  fails=$((fails + 1))
+fi
 
 # T2 shebang + 100644, yalnizca git add (commit yok) -> kirmizi (CB-1, staged)
 r=$(new_repo t2) && printf '#!/bin/sh\necho hi\n' > "$r/run.sh" && git -C "$r" add run.sh
