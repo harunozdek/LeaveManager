@@ -103,6 +103,13 @@ expect "T9b bosluk/glob karakterli yol 100644 -> 1" 1 "${r:-$TMP/t9b}" "a b[1].s
 r=$(new_repo t10) && printf 'echo hi\n#! not a:1:#!b\n' > "$r/y.sh" && git -C "$r" add y.sh
 expect "T10 icerikte ':1:#!' -> 0" 0 "${r:-$TMP/t10}"
 
+# T11 git grep hata verirse (bozuk index) sessizce "ok" denmez -> cikis 2 (review bulgu 4)
+r=$(new_repo t11) && printf 'bozuk' > "$TMP/bozuk-index"
+GIT_INDEX_FILE="$TMP/bozuk-index"
+export GIT_INDEX_FILE
+expect "T11 git grep hatasi -> 2" 2 "${r:-$TMP/t11}" "git grep basarisiz"
+unset GIT_INDEX_FILE
+
 rm -rf "$TMP"
 if [ -d "$TMP" ]; then echo "FAIL  gecici depo silinemedi: $TMP"; fails=$((fails + 1)); fi
 

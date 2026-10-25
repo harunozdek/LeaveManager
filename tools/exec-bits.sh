@@ -16,7 +16,14 @@ fi
 # -z: yollar tirnaklanmaz (Turkce/ozel karakterler); literal pathspec: [ * ? glob sayilmaz.
 GIT_LITERAL_PATHSPECS=1
 export GIT_LITERAL_PATHSPECS
-candidates=$(git grep --no-color -G --cached -I -l -z -e '^#!' 2>/dev/null | tr '\000' '\n')
+# Pipe icinde git grep'in cikis kodu kaybolur; once -q ile olculur: 0 eslesme, 1 eslesme yok, digeri hata.
+err=$(git grep --no-color -G --cached -I -q -e '^#!' 2>&1 >/dev/null)
+rc=$?
+if [ "$rc" -gt 1 ]; then
+  echo "exec-bits: git grep basarisiz (cikis $rc) — kontrol yapilamadi: $err"
+  exit 2
+fi
+candidates=$(git grep --no-color -G --cached -I -l -z -e '^#!' | tr '\000' '\n')
 
 bad=""
 while IFS= read -r f; do
