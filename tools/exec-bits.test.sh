@@ -68,7 +68,8 @@ expect "T3 shebang 100755 -> 0" 0 "${r:-$TMP/t3}"
 r=$(new_repo t4) && printf 'merhaba\n' > "$r/notes.txt" && git -C "$r" add notes.txt
 expect "T4 shebang'siz 100644 -> 0" 0 "${r:-$TMP/t4}"
 
-# T5 icerigi #! ile baslayan symlink kaydi (120000) -> yok sayilir
+# T5 icerigi #! ile baslayan symlink kaydi (120000) -> yok sayilir (git grep --cached symlink aramaz;
+#    guard'da ayrica bir dal yok — bu senaryo davranisi dogrular, review bulgu 6)
 r=$(new_repo t5) && sha=$(printf '#!hedef' | git -C "$r" hash-object -w --stdin) &&
   git -C "$r" update-index --add --cacheinfo "120000,$sha,link"
 expect "T5 symlink 120000 -> 0" 0 "${r:-$TMP/t5}"

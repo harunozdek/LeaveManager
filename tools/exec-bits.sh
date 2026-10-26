@@ -1,7 +1,8 @@
 #!/bin/sh
 # tools/exec-bits.sh — spec 0003: ilk satiri #! olan her takip edilen dosya git'te 100755 kayitli olmali.
 # Dosya sisteminin izinlerine degil git index'ine bakar; Windows (core.fileMode=false) ve Linux ayni
-# sonucu verir. Staged dosyalar dahildir. Symlink (120000) ve submodule (160000) kayitlari yok sayilir.
+# sonucu verir. Staged dosyalar dahildir. Symlink (120000) ve submodule (160000) kayitlari aday olmaz:
+# git grep --cached yalnizca normal dosya kayitlarini arar (T5 bu davranisi dogrular).
 # Resource hygiene: yalnizca kisa omurlu git/sed surecleri; hicbir sey yazmaz.
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT" || exit 1
@@ -30,7 +31,7 @@ while IFS= read -r f; do
   [ -n "$f" ] || continue
   mode=$(git ls-files -s -- "$f" | cut -d' ' -f1)
   case "$mode" in
-    100755|120000|160000) continue ;;
+    100755) continue ;;
     '') bad="${bad}? $f
 "; continue ;;   # mod okunamadi: sessizce atlama, ihlal say (fail-closed)
   esac
